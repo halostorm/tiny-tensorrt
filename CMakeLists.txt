@@ -6,8 +6,8 @@ project(tinytrt)
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
 # set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib CACHE PATH "")
-option(BUILD_PYTHON "compile python api" ON)
-option(BUILD_TEST "compile test" OFF)
+option(BUILD_PYTHON "compile python api" OFF)
+option(BUILD_TEST "compile test" ON)
 
 find_package(CUDA REQUIRED)
 # Discover what architectures does nvcc support
@@ -39,7 +39,18 @@ find_path(TENSORRT_INCLUDE_DIR NvInfer.h
   HINTS ${TENSORRT_ROOT} ${CUDA_TOOLKIT_ROOT_DIR}
   PATH_SUFFIXES include)
 MESSAGE(STATUS "Found TensorRT headers at ${TENSORRT_INCLUDE_DIR}")
+include_directories(${TENSORRT_INCLUDE_DIR})
 
+find_path(TENSORRT_LIBS_DIR libnvinfer.so
+  HINTS ${TENSORRT_ROOT}
+  PATH_SUFFIXES lib)
+MESSAGE(STATUS "Found TensorRT libs at ${TENSORRT_LIBS_DIR}")
+file(GLOB TENSORRT_LIBS 
+	"${TENSORRT_LIBS_DIR}/*nvinfer.so"
+	"${TENSORRT_LIBS_DIR}/*nvinfer_plugin.so"
+	"${TENSORRT_LIBS_DIR}/*nvparsers.so"
+	"${TENSORRT_LIBS_DIR}/*nvonnxparser.so"
+	"${TENSORRT_LIBS_DIR}/*nvcaffe_parser.so")
 
 file(GLOB_RECURSE trt_source
      Trt.cpp
@@ -59,11 +70,12 @@ if(BUILD_PYTHON)
   add_subdirectory(pybind11)
   pybind11_add_module(pytrt SHARED PyTrt.cpp)
   target_link_libraries(pytrt PRIVATE tinytrt)
-  target_link_libraries(pytrt PRIVATE nvinfer)
-  target_link_libraries(pytrt PRIVATE nvinfer_plugin)
-  target_link_libraries(pytrt PRIVATE nvparsers)
-  target_link_libraries(pytrt PRIVATE nvonnxparser)
-  target_link_libraries(pytrt PRIVATE nvcaffe_parser)
+  target_link_libraries(pytrt PRIVATE ${TENSORRT_LIBS})
+  #target_link_libraries(pytrt PRIVATE nvinfer)
+  #target_link_libraries(pytrt PRIVATE nvinfer_plugin)
+  #target_link_libraries(pytrt PRIVATE nvparsers)
+  #target_link_libraries(pytrt PRIVATE nvonnxparser)
+  #target_link_libraries(pytrt PRIVATE nvcaffe_parser)
 endif()
 
 ## custom test
@@ -75,10 +87,11 @@ message(STATUS "Build test")
   add_executable(unit_test ${test_source})
   target_compile_options(unit_test PUBLIC -std=c++11 -Wall -Wfloat-conversion)
   target_link_libraries(unit_test tinytrt)
-  target_link_libraries(unit_test nvinfer)
-  target_link_libraries(unit_test nvinfer_plugin)
-  target_link_libraries(unit_test nvparsers)
-  target_link_libraries(unit_test nvonnxparser)
-  target_link_libraries(unit_test nvcaffe_parser)
-  target_link_libraries(unit_test ${CUDART})
+  target_link_libraries(unit_test ${TENSORRT_LIBS})
+  #target_link_libraries(unit_test nvinfer)
+  #target_link_libraries(unit_test nvinfer_plugin)
+  #target_link_libraries(unit_test nvparsers)
+  #target_link_libraries(unit_test nvonnxparser)
+  #target_link_libraries(unit_test nvcaffe_parser)
+  #target_link_libraries(unit_test ${CUDART})
 endif()
