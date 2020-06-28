@@ -47,7 +47,7 @@ for python api, python 2.x/3.x and numpy in needed
 Make sure you had install dependencies list above, if you are familiar with docker, you can use [official docker](https://ngc.nvidia.com/catalog/containers/nvidia:tensorrt)
 ```bash
 # clone project and submodule
-git clone --recurse-submodules -j8 https://github.com/zerollzeng/tiny-tensorrt.git
+git clone --recurse-submodules -j8 https://github.com/halostorm/tiny-tensorrt.git
 
 cd tiny-tensorrt
 
